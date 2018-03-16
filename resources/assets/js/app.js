@@ -15,8 +15,51 @@ window.Vue = require('vue');
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-Vue.component('example-component', require('./components/ExampleComponent.vue'));
+//Vue.component('example-component', require('./components/ExampleComponent.vue'));
+
+Vue.component('chat-messages', require('./components/ChatMessages.vue'));
+Vue.component('chat-form', require('./components/ChatForm.vue'));
 
 const app = new Vue({
-    el: '#app'
+    el: '#app',
+
+    data: {
+        messages: []
+    },
+
+    created() {
+        this.fetchMessages();        
+		Echo.private('chat')
+		  .listen('MessageSent', (e) => {
+		    this.messages.push({
+		      message: e.message.message,
+		      user: e.user
+		    });
+		  });        
+    },
+
+    methods: {
+        fetchMessages() {
+            axios.get('/messages').then(response => {
+                this.messages = response.data;
+            });
+        },
+
+	  	scrollToEnd: function() { 
+
+	      var chat = this.$el.querySelector(".chat");
+	      chat.scrollTop = chat.scrollHeight;
+	      console.log(chat);
+	    },        
+
+        addMessage(message) {       	
+            this.messages.push(message);
+            scroll(event.target.nextSibling);
+
+            axios.post('/messages', message).then(response => {
+              console.log(response.data);
+              //this.scrollToEnd();
+            });
+        }
+    }
 });
